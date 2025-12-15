@@ -11,6 +11,7 @@ import {
 import { Button } from './ui/button'
 import { ShoppingBagIcon } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
+import { ProductSelect } from '@/db/schema'
 
 const inventoryTone = {
   'in-stock': 'bg-emerald-50 text-emerald-600 border-emerald-100',
@@ -18,24 +19,11 @@ const inventoryTone = {
   preorder: 'bg-indigo-50 text-indigo-700 border-indigo-100',
 }
 
-export function ProductCard({
-  product,
-}: {
-  product: {
-    name: string
-    description: string
-    price: string
-    badge?: string
-    rating: string
-    reviews: number
-    image: string
-    inventory: string
-  }
-}) {
+export function ProductCard({ product }: { product: ProductSelect }) {
   return (
     <Link
       to="/products/$id"
-      params={{ id: '1' }}
+      params={{ id: product.id }}
       className="cursor-pointer h-full hover:-translate-y-1
      hover:shadow-lg transition"
     >
