@@ -1,19 +1,18 @@
+import { ProductSelect } from '@/db/schema'
 import { cn } from '@/lib/utils'
+import { mutateCartFn } from '@/routes/cart'
+import { useQueryClient } from '@tanstack/react-query'
+import { Link, useRouter } from '@tanstack/react-router'
+import { ShoppingBagIcon } from 'lucide-react'
+import { Button } from './ui/button'
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from './ui/card'
-import { Button } from './ui/button'
-import { ShoppingBagIcon } from 'lucide-react'
-import { Link, useRouter } from '@tanstack/react-router'
-import { ProductSelect } from '@/db/schema'
-import { mutateCartFn } from '@/routes/cart'
-import { useQueryClient } from '@tanstack/react-query'
 
 const inventoryTone = {
   'in-stock': 'bg-emerald-50 text-emerald-600 border-emerald-100',

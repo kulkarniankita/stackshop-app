@@ -1,30 +1,13 @@
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
-import { Minus, Plus, ShoppingBag } from 'lucide-react'
+import { Minus, Plus } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '@/components/ui/empty'
-import { createServerFn } from '@tanstack/react-start'
-import { useQueryClient } from '@tanstack/react-query'
 
-type MutateCartFnInput =
-  | {
-      action: 'add' | 'remove' | 'update'
-      productId: string
-      quantity: number
-    }
-  | {
-      action: 'clear'
-      productId?: never
-      quantity?: never
-    }
+import { EmptyCartState } from '@/components/cart/EmptyCartState'
+import { useQueryClient } from '@tanstack/react-query'
+import { createServerFn } from '@tanstack/react-start'
+import { CartFooter } from '@/components/cart/CartFooter'
+import { CartItem, MutateCartFnInput } from '@/types/cart-types'
 
 const fetchCartItems = createServerFn({ method: 'GET' }).handler(async () => {
   const { getCartItems } = await import('@/data/cart.server')
@@ -60,7 +43,6 @@ function CartPage() {
   const queryClient = useQueryClient()
   const router = useRouter()
   const cart = Route.useLoaderData()
-  console.log('---cart--', cart)
   const shipping = cart.items.length > 0 ? 8 : 0
   const subtotal = cart.items.reduce(
     (acc: number, item) => acc + Number(item.price) * item.quantity,
@@ -69,35 +51,60 @@ function CartPage() {
   const total = subtotal + shipping
 
   if (cart.items.length === 0) {
-    return (
-      <div className="mx-auto max-w-4xl">
-        <Card>
-          <CardContent>
-            <Empty>
-              <EmptyMedia variant="icon">
-                <ShoppingBag />
-              </EmptyMedia>
-              <EmptyHeader>
-                <EmptyTitle>Your cart is empty</EmptyTitle>
-                <EmptyDescription>
-                  Add a few items from the catalog to see them here.
-                </EmptyDescription>
-              </EmptyHeader>
-              <EmptyContent>
-                <Link
-                  to="/products"
-                  className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:bg-white dark:text-slate-900"
-                >
-                  Browse products
-                </Link>
-              </EmptyContent>
-            </Empty>
-          </CardContent>
-        </Card>
-      </div>
-    )
+    return <EmptyCartState />
   }
 
+  const handleClearCart = async () => {
+    await mutateCartFn({
+      data: {
+        action: 'clear',
+      },
+    })
+    await router.invalidate({ sync: true })
+    await queryClient.invalidateQueries({ queryKey: ['cart-items-data'] })
+  }
+
+  const handleDecrementQuantity = async (item: CartItem) => {
+    await mutateCartFn({
+      data: {
+        action: 'update',
+        productId: item.id,
+        quantity: Number(item.quantity) - 1,
+      },
+    })
+    await router.invalidate({ sync: true })
+    await queryClient.invalidateQueries({
+      queryKey: ['cart-items-data'],
+    })
+  }
+
+  const handleIncrementQuantity = async (item: CartItem) => {
+    await mutateCartFn({
+      data: {
+        action: 'add',
+        productId: item.id,
+        quantity: 1,
+      },
+    })
+    await router.invalidate({ sync: true })
+    await queryClient.invalidateQueries({
+      queryKey: ['cart-items-data'],
+    })
+  }
+
+  const handleRemoveItem = async (item: CartItem) => {
+    await mutateCartFn({
+      data: {
+        action: 'remove',
+        quantity: 0,
+        productId: item.id,
+      },
+    })
+    await router.invalidate({ sync: true })
+    await queryClient.invalidateQueries({
+      queryKey: ['cart-items-data'],
+    })
+  }
   return (
     <div className="mx-auto grid max-w-5xl gap-6 rounded-2xl border bg-white/80 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/80 lg:grid-cols-[2fr,1fr]">
       <div className="space-y-4">
@@ -108,21 +115,7 @@ function CartPage() {
               Review your picks before checking out.
             </p>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={async () => {
-              await mutateCartFn({
-                data: {
-                  action: 'clear',
-                },
-              })
-              await router.invalidate({ sync: true })
-              await queryClient.invalidateQueries({
-                queryKey: ['cart-items-data'],
-              })
-            }}
-          >
+          <Button variant="ghost" size="sm" onClick={handleClearCart}>
             Clear cart
           </Button>
         </div>
@@ -168,19 +161,7 @@ function CartPage() {
                     size="icon-sm"
                     variant="outline"
                     aria-label={`Decrease ${item.name}`}
-                    onClick={async () => {
-                      await mutateCartFn({
-                        data: {
-                          action: 'update',
-                          productId: item.id,
-                          quantity: Number(item.quantity) - 1,
-                        },
-                      })
-                      await router.invalidate({ sync: true })
-                      await queryClient.invalidateQueries({
-                        queryKey: ['cart-items-data'],
-                      })
-                    }}
+                    onClick={() => handleDecrementQuantity(item)}
                   >
                     <Minus size={14} />
                   </Button>
@@ -196,19 +177,7 @@ function CartPage() {
                     size="icon-sm"
                     variant="outline"
                     aria-label={`Increase ${item.name}`}
-                    onClick={async () => {
-                      await mutateCartFn({
-                        data: {
-                          action: 'add',
-                          productId: item.id,
-                          quantity: 1,
-                        },
-                      })
-                      await router.invalidate({ sync: true })
-                      await queryClient.invalidateQueries({
-                        queryKey: ['cart-items-data'],
-                      })
-                    }}
+                    onClick={() => handleIncrementQuantity(item)}
                   >
                     <Plus size={14} />
                   </Button>
@@ -220,19 +189,7 @@ function CartPage() {
                   size="sm"
                   variant="ghost"
                   className="text-slate-500 hover:text-red-500"
-                  onClick={async () => {
-                    await mutateCartFn({
-                      data: {
-                        action: 'remove',
-                        quantity: 0,
-                        productId: item.id,
-                      },
-                    })
-                    await router.invalidate({ sync: true })
-                    await queryClient.invalidateQueries({
-                      queryKey: ['cart-items-data'],
-                    })
-                  }}
+                  onClick={() => handleRemoveItem(item)}
                 >
                   Remove
                 </Button>
@@ -242,40 +199,7 @@ function CartPage() {
         </div>
       </div>
 
-      <div className="space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-5 text-sm shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
-        <h2 className="text-lg font-semibold">Order summary</h2>
-        <div className="space-y-2">
-          <SummaryRow label="Subtotal" value={subtotal} />
-          <SummaryRow label="Shipping" value={shipping} />
-          <div className="h-px bg-slate-200 dark:bg-slate-800" />
-          <SummaryRow label="Total" value={total} bold />
-        </div>
-        <Button className="w-full bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100">
-          Checkout (demo)
-        </Button>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          Your cart is stored in the database and synced with TanStack Query.
-        </p>
-      </div>
-    </div>
-  )
-}
-
-function SummaryRow({
-  label,
-  value,
-  bold,
-}: {
-  label: string
-  value: number
-  bold?: boolean
-}) {
-  return (
-    <div className="flex items-center justify-between">
-      <span className={bold ? 'font-semibold' : ''}>{label}</span>
-      <span className={bold ? 'text-lg font-bold' : 'font-semibold'}>
-        ${value.toFixed(2)}
-      </span>
+      <CartFooter subtotal={subtotal} shipping={shipping} total={total} />
     </div>
   )
 }
