@@ -9,7 +9,6 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { getProductById, getRecommendedProducts } from '@/data/products'
 import { ProductSelect } from '@/db/schema'
 import { createFileRoute, Link, notFound } from '@tanstack/react-router'
 import { ArrowLeftIcon, ShoppingBagIcon, SparklesIcon } from 'lucide-react'
@@ -18,7 +17,11 @@ import { Suspense } from 'react'
 export const Route = createFileRoute('/products/$id')({
   component: RouteComponent,
   loader: async ({ params }) => {
+    const { getRecommendedProducts, getProductById } =
+      await import('@/data/products')
+
     const recommededProducts = getRecommendedProducts()
+
     const product = await getProductById(params.id)
     if (!product) {
       throw notFound()

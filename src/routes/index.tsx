@@ -5,21 +5,26 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { getRecommendedProducts } from '@/data/products'
 import { createFileRoute, Link } from '@tanstack/react-router'
+import { createServerFn } from '@tanstack/react-start'
 import { ArrowRightIcon } from 'lucide-react'
+
+const fetchProductsFn = createServerFn({ method: 'GET' }).handler(async () => {
+  const { getRecommendedProducts } = await import('@/data/products')
+  const products = await getRecommendedProducts()
+  return products
+})
 
 export const Route = createFileRoute('/')({
   component: App,
   loader: async () => {
     // This runs on server during SSR AND on client during navigation
-    const products = await getRecommendedProducts()
-    return { products }
+    return fetchProductsFn()
   },
 })
 
 async function App() {
-  const { products } = Route.useLoaderData()
+  const products = Route.useLoaderData()
 
   console.log('--client products--', products)
   return (
