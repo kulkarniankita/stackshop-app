@@ -42,7 +42,9 @@ export const cartItems = pgTable('cart_items', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
 
-export type CartItemSelect = typeof cartItems.$inferSelect
+export type CartItemSelect = typeof cartItems.$inferSelect &
+  typeof products.$inferSelect
+
 export type CartItemInsert = typeof cartItems.$inferInsert
 
 // Export enum value types inferred from the enum definitions
