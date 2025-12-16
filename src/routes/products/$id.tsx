@@ -8,33 +8,40 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
 import { ProductSelect } from '@/db/schema'
-import {
-  createFileRoute,
-  Link,
-  notFound,
-  useRouter,
-} from '@tanstack/react-router'
+import { createFileRoute, Link, notFound } from '@tanstack/react-router'
+import { createServerFn } from '@tanstack/react-start'
 import { ArrowLeftIcon, ShoppingBagIcon, SparklesIcon } from 'lucide-react'
 import { Suspense } from 'react'
-import { mutateCartFn } from '../cart'
-import { useQueryClient } from '@tanstack/react-query'
+import { Skeleton } from '@/components/ui/skeleton'
+
+const fetchProductById = createServerFn({ method: 'POST' })
+  .inputValidator((data: { id: string }) => data)
+  .handler(async ({ data }) => {
+    const { getProductById } = await import('@/data/products')
+    const product = await getProductById(data.id)
+    return product
+  })
+
+const fetchRecommendedProducts = createServerFn({ method: 'GET' }).handler(
+  async () => {
+    const { getRecommendedProducts } = await import('@/data/products')
+    return getRecommendedProducts()
+  },
+)
 
 export const Route = createFileRoute('/products/$id')({
   component: RouteComponent,
   loader: async ({ params }) => {
-    const { getRecommendedProducts, getProductById } =
-      await import('@/data/products')
-
-    const recommededProducts = getRecommendedProducts()
-
-    const product = await getProductById(params.id)
+    // Use server functions to ensure server-only execution
+    const product = await fetchProductById({ data: { id: params.id } })
     if (!product) {
       throw notFound()
     }
+    // Return recommendedProducts as a Promise for Suspense
+    const recommendedProducts = fetchRecommendedProducts()
     console.log('product', product)
-    return { product, recommendedProducts: recommededProducts }
+    return { product, recommendedProducts }
   },
   head: async ({ loaderData: data }) => {
     const { product } = data as {
@@ -70,8 +77,6 @@ export const Route = createFileRoute('/products/$id')({
 })
 
 function RouteComponent() {
-  const router = useRouter()
-  const queryClient = useQueryClient()
   const { product, recommendedProducts } = Route.useLoaderData()
   return (
     <div>

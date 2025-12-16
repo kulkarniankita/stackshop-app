@@ -18,6 +18,13 @@ const config = defineConfig({
     tanstackStart(),
     viteReact(),
   ],
+  ssr: {
+    noExternal: [],
+    external: ['pg', 'pg-native'],
+  },
+  optimizeDeps: {
+    exclude: ['pg', 'pg-native'],
+  },
 })
 
 export default config
