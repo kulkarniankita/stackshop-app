@@ -1,3 +1,4 @@
+import { RecommendedProducts } from '@/components/RecommendedProducts'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -7,21 +8,29 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { getProductById } from '@/data/products'
+import { Skeleton } from '@/components/ui/skeleton'
+import { getProductById, getRecommendedProducts } from '@/data/products'
+import { ProductSelect } from '@/db/schema'
 import { createFileRoute, Link, notFound } from '@tanstack/react-router'
 import { ArrowLeftIcon, ShoppingBagIcon, SparklesIcon } from 'lucide-react'
+import { Suspense } from 'react'
 
 export const Route = createFileRoute('/products/$id')({
   component: RouteComponent,
   loader: async ({ params }) => {
+    const recommededProducts = getRecommendedProducts()
     const product = await getProductById(params.id)
     if (!product) {
       throw notFound()
     }
     console.log('product', product)
-    return product
+    return { product, recommendedProducts: recommededProducts }
   },
-  head: async ({ loaderData: product }) => {
+  head: async ({ loaderData: data }) => {
+    const { product } = data as {
+      product: ProductSelect
+      recommendedProducts: Promise<ProductSelect[]>
+    }
     console.log('product in head', product)
     if (!product) {
       return {}
@@ -51,7 +60,7 @@ export const Route = createFileRoute('/products/$id')({
 })
 
 function RouteComponent() {
-  const product = Route.useLoaderData()
+  const { product, recommendedProducts } = Route.useLoaderData()
   return (
     <div>
       <Card className="max-w-4xl mx-auto p-6">
@@ -126,6 +135,21 @@ function RouteComponent() {
             </div>
           </div>
         </Card>
+
+        <Suspense
+          fallback={
+            <div>
+              <h2 className="text-2xl font-bold my-4">Recommended Products</h2>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <Skeleton key={index} className="w-full h-48" />
+                ))}
+              </div>
+            </div>
+          }
+        >
+          <RecommendedProducts recommendedProducts={recommendedProducts} />
+        </Suspense>
       </Card>
     </div>
   )
