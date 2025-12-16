@@ -17,7 +17,7 @@ const fetchCartItems = createServerFn({ method: 'GET' }).handler(async () => {
 
 export const mutateCartFn = createServerFn({ method: 'POST' })
   .inputValidator((data: MutateCartFnInput) => data)
-  .handler(async ({ data }) => {
+  .handler(async ({ data }: { data: MutateCartFnInput }) => {
     const { addToCart, updateCartItem, removeFromCart, clearCart } =
       await import('@/data/cart.server')
     switch (data.action) {

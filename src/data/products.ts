@@ -15,7 +15,6 @@ export async function getAllProducts() {
 
 export async function getRecommendedProducts() {
   try {
-    await new Promise((resolve) => setTimeout(resolve, 5000))
     const productsData = await db.select().from(products).limit(3)
     return productsData
   } catch (error) {

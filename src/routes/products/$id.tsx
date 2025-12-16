@@ -10,9 +10,16 @@ import {
 } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ProductSelect } from '@/db/schema'
-import { createFileRoute, Link, notFound } from '@tanstack/react-router'
+import {
+  createFileRoute,
+  Link,
+  notFound,
+  useRouter,
+} from '@tanstack/react-router'
 import { ArrowLeftIcon, ShoppingBagIcon, SparklesIcon } from 'lucide-react'
 import { Suspense } from 'react'
+import { mutateCartFn } from '../cart'
+import { useQueryClient } from '@tanstack/react-query'
 
 export const Route = createFileRoute('/products/$id')({
   component: RouteComponent,
@@ -63,6 +70,8 @@ export const Route = createFileRoute('/products/$id')({
 })
 
 function RouteComponent() {
+  const router = useRouter()
+  const queryClient = useQueryClient()
   const { product, recommendedProducts } = Route.useLoaderData()
   return (
     <div>
