@@ -1,4 +1,12 @@
-# StartShop - Modern E-Commerce Platform Built with TanStack Start
+# TanStack Start Full Course
+
+You can click here to get to the video 👇
+
+[![Watch the video](https://img.youtube.com/vi/G8D_n47rvoo/0.jpg)](https://youtu.be/G8D_n47rvoo?si=iupmWDkOUEeLnqmS)
+
+As part of the course, we are building and deploying a app called StartShop.
+
+## StartShop - Modern E-Commerce Platform Built with TanStack Start
 
 Get complete access to StartShop, a production-ready e-commerce platform that demonstrates the power of modern React frameworks with server-side rendering, type-safe routing, and seamless shopping cart functionality.
 
